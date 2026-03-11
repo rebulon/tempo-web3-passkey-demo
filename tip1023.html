@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TIP-1023 · Intent Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="tb-left">
+    <div class="tb-brand">
+      <div class="live-dot"></div>
+      TIP-1023
+    </div>
+    <span class="tb-chain">Moderato · 42431</span>
+    <span class="tb-block" id="tb-block">block —</span>
+  </div>
+  <div class="tb-right">
+    <div class="tb-tok-pill" id="tb-tok-pathusd" style="display:none">
+      <span class="dot" style="background:#ff4d00"></span>
+      <span>pathUSD</span>
+      <span class="val" id="tb-bal-pathusd">0</span>
+    </div>
+    <div class="tb-tok-pill" id="tb-tok-alphausd" style="display:none">
+      <span class="dot" style="background:#1a6bff"></span>
+      <span>AlphaUSD</span>
+      <span class="val" id="tb-bal-alphausd">0</span>
+    </div>
+    <div class="tb-tok-pill" id="tb-tok-betausd" style="display:none">
+      <span class="dot" style="background:#00a878"></span>
+      <span>BetaUSD</span>
+      <span class="val" id="tb-bal-betausd">0</span>
+    </div>
+    <div class="tb-tok-pill" id="tb-tok-thetausd" style="display:none">
+      <span class="dot" style="background:#9c27b0"></span>
+      <span>ThetaUSD</span>
+      <span class="val" id="tb-bal-thetausd">0</span>
+    </div>
+    <span id="topbar-disconnected" class="tb-hint">not connected</span>
+    <div id="topbar-connected" class="tb-addr-block" style="display:none">
+      <span class="tb-addr-icon" id="tb-wallet-icon">🔑</span>
+      <a id="tb-addr-link" class="tb-addr-link" href="#" target="_blank">
+        <span id="tb-addr">0x0000…0000</span>
+      </a>
+      <button class="tb-btn-x" onclick="clickDisconnect()">✕</button>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+
+  <header class="page-header">
+    <div class="tip-eyebrow">TIP-1023</div>
+    <h1 class="page-title">Intent <span>Builder</span></h1>
+    <p class="page-sub">Tempo Testnet (Moderato) · pathUSD · AlphaUSD · BetaUSD · ThetaUSD</p>
+  </header>
+
+  <div class="layout">
+
+    <aside>
+
+      <!-- WALLET -->
+      <div class="panel" id="panel-connect">
+        <div class="panel-head">
+          <div class="ph-left">
+            <div class="ph-bar"></div>
+            <span class="ph-label">Wallet</span>
+          </div>
+          <span id="ph-status-dot" style="width:7px;height:7px;border-radius:50%;background:#333;display:inline-block"></span>
+        </div>
+        <div class="panel-body">
+
+          <div id="section-not-connected">
+            <div id="pk-stored-block" style="display:none">
+              <div id="pk-stored-info" class="alert alert-inf" style="margin-bottom:10px"></div>
+              <div class="row-2" style="margin-bottom:10px">
+                <button id="btn-login-pk" class="btn btn-solid" onclick="clickLoginPasskey()">🔑 Sign In</button>
+                <button class="btn btn-ghost" onclick="clickDeletePasskey()">Remove</button>
+              </div>
+            </div>
+
+            <div id="pk-new-block">
+              <p class="hint-small" style="margin-bottom:10px">
+                Passkey is a P-256 biometric key. Works in Chrome / Edge / Safari
+                on <code style="color:var(--accent)">localhost</code>.
+              </p>
+              <div class="field">
+                <label>Account Name</label>
+                <input type="text" id="inp-pk-username" value="tempo-user" placeholder="tempo-user">
+              </div>
+              <button id="btn-register-pk" class="btn btn-solid" onclick="clickRegisterPasskey()" style="margin-bottom:10px">
+                🔑 Create Passkey
+              </button>
+            </div>
+
+            <hr class="divider">
+            <button id="btn-metamask" class="btn btn-outline" onclick="clickConnectMetaMask()">🦊 MetaMask</button>
+            <p class="hint-small">Tempo Testnet (chain 42431) will be added automatically</p>
+            <div id="connect-err" class="alert alert-err" style="display:none"></div>
+          </div>
+
+          <div id="section-connected" style="display:none">
+            <div class="conn-status-row">
+              <span class="conn-dot"></span>
+              <span class="conn-type" id="conn-type-label">🔑 Passkey connected</span>
+              <span class="conn-badge">Tempo 42431</span>
+            </div>
+            <div class="conn-addr-full" id="conn-addr-full">—</div>
+            <button id="btn-key-toggle" class="btn-ghost" onclick="clickToggleKeyDetails()">▼ key details</button>
+            <div id="key-details-section" style="display:none;margin-top:10px">
+              <div class="code-block" id="key-details-code"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- FAUCET -->
+      <div class="panel" id="panel-faucet" style="display:none">
+        <div class="panel-head">
+          <div class="ph-left">
+            <div class="ph-bar"></div>
+            <span class="ph-label">Test Tokens</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <p class="hint-small" style="margin-bottom:10px">
+            Get 1M of each token via <code style="color:var(--accent);font-size:11px">tempo_fundAddress</code>
+          </p>
+          <div class="faucet-grid">
+            <div class="faucet-row">
+              <span class="f-badge" style="border-color:#ff4d00;color:#ff4d00">pathUSD</span>
+              <span class="f-addr">0x20c0…0000</span>
+              <span class="f-bal" id="fbal-pathusd" style="color:#888">0.00</span>
+            </div>
+            <div class="faucet-row">
+              <span class="f-badge" style="border-color:#1a6bff;color:#1a6bff">AlphaUSD</span>
+              <span class="f-addr">0x20c0…0001</span>
+              <span class="f-bal" id="fbal-alphausd" style="color:#888">0.00</span>
+            </div>
+            <div class="faucet-row">
+              <span class="f-badge" style="border-color:#00a878;color:#00a878">BetaUSD</span>
+              <span class="f-addr">0x20c0…0002</span>
+              <span class="f-bal" id="fbal-betausd" style="color:#888">0.00</span>
+            </div>
+            <div class="faucet-row">
+              <span class="f-badge" style="border-color:#9c27b0;color:#9c27b0">ThetaUSD</span>
+              <span class="f-addr">0x20c0…0003</span>
+              <span class="f-bal" id="fbal-thetausd" style="color:#888">0.00</span>
+            </div>
+          </div>
+          <button id="btn-faucet" class="btn btn-green" onclick="clickFaucet()">💧 Get Tokens (1M each)</button>
+          <div id="faucet-msg" style="display:none"></div>
+        </div>
+      </div>
+
+    </aside>
+
+    <section>
+
+      <!-- INTENT BUILDER -->
+      <div class="builder-card">
+        <div class="builder-topbar">
+          <div class="btb-dot"></div>
+          <span class="btb-label">TIP-1023 Intent Builder · live preview</span>
+        </div>
+        <div class="builder-body">
+
+          <div class="field">
+            <label>Scenario</label>
+            <select id="sel-scenario"></select>
+          </div>
+
+          <div class="tok-info-row" id="tok-info-row">
+            <span class="tok-dot" id="tok-from-dot" style="background:#ff4d00"></span>
+            <span class="tok-sym" id="tok-from-sym">pathUSD</span>
+            <span class="tok-addr-small" id="tok-from-addr">0x20c0…0000</span>
+            <span class="tok-bal-small" id="tok-from-bal">—</span>
+            <span id="tok-to-section" style="display:none;align-items:center;gap:8px">
+              <span class="tok-arrow">→</span>
+              <span class="tok-dot" id="tok-to-dot" style="background:#1a6bff"></span>
+              <span class="tok-sym" id="tok-to-sym">AlphaUSD</span>
+            </span>
+          </div>
+
+          <div class="field">
+            <label id="amount-label">Amount (pathUSD)</label>
+            <input type="number" id="inp-amount" value="100" min="0.01" step="0.01">
+          </div>
+
+          <div class="field" id="field-to-address" style="display:none">
+            <label>Recipient Address</label>
+            <input type="text" id="inp-to-address" placeholder="0x...">
+          </div>
+
+          <div class="field">
+            <label>Signature</label>
+            <div class="field-locked" id="sig-type-display">secp256k1</div>
+          </div>
+
+          <div class="field">
+            <label>Fee Token</label>
+            <select id="sel-fee-token"></select>
+          </div>
+
+          <div class="field">
+            <label>Fee Ceiling (USD)</label>
+            <input type="number" id="inp-fee-ceiling" value="0.05" min="0" step="0.01">
+          </div>
+
+          <div class="field">
+            <div class="surplus-header">
+              <label class="surplus-title">Surplus Share</label>
+              <span class="surplus-value">To user <strong id="surplus-val">70%</strong></span>
+            </div>
+            <input type="range" id="inp-surplus" min="0" max="100" value="70">
+            <div class="surplus-hints">
+              <span>0% → resolver</span>
+              <span>100% → user</span>
+            </div>
+          </div>
+
+          <div class="field" id="cond-section" style="display:none">
+            <label>Conditions</label>
+            <div id="cond-list"></div>
+          </div>
+
+          <div class="hash-preview">
+            <div class="hp-label">Intent Hash (TIP-1023 · tx_type 0x49)</div>
+            <div class="hp-val" id="live-hash">— connect wallet to preview —</div>
+          </div>
+
+          <button id="btn-generate" class="btn-generate" onclick="clickGenerate()">GENERATE INTENT →</button>
+          <p id="hint-connect" class="hint-center">Connect a wallet above to submit</p>
+
+        </div>
+      </div>
+
+      <!-- STATUS -->
+      <div class="panel" id="panel-status" style="display:none">
+        <div class="panel-head">
+          <div class="ph-left">
+            <div class="ph-bar" style="background:var(--green)"></div>
+            <span class="ph-label">Result</span>
+          </div>
+          <button class="btn-ghost" onclick="clickResetStatus()" style="font-size:10px">Reset</button>
+        </div>
+        <div class="panel-body">
+          <div class="status-row">
+            <span class="status-dot" id="status-dot"></span>
+            <span class="status-label" id="status-label">—</span>
+          </div>
+          <div class="info-field" id="status-intent-hash" style="display:none">
+            <div class="if-label">Intent Hash (TIP-1023 · 0x49)</div>
+            <div class="if-val" id="s-intent-hash" style="color:var(--blue);font-family:var(--mono);font-size:10px"></div>
+          </div>
+          <div class="info-field" id="status-tx-hash" style="display:none">
+            <div class="if-label">TX Hash</div>
+            <a class="if-val if-link" id="s-tx-hash" href="#" target="_blank" style="font-family:var(--mono);font-size:10px"></a>
+          </div>
+          <div id="status-sig-block" style="display:none;margin-bottom:8px">
+            <div class="code-block" id="status-sig-code"></div>
+          </div>
+          <div id="status-ok-msg" class="alert alert-ok" style="display:none"></div>
+          <div id="status-err-msg" class="alert alert-err" style="display:none"></div>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <footer class="footer">
+    <div style="display:flex;align-items:center;gap:10px">
+      <strong>TIP-1023</strong>
+      <span class="footer-sep">·</span>
+      Tempo Testnet (Moderato)
+      <span class="footer-sep">·</span>
+      Chain 42431
+    </div>
+    <div style="display:flex;gap:14px">
+      <a href="https://docs.tempo.xyz" target="_blank">docs.tempo.xyz</a>
+      <a href="https://explore.tempo.xyz" target="_blank">explorer</a>
+    </div>
+  </footer>
+
+</main>
+
+<script src="js/config.js"></script>
+<script src="js/passkey.js"></script>
+<script src="js/wallet.js"></script>
+<script src="js/tokens.js"></script>
+<script src="js/intent.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
