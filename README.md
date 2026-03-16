@@ -15,18 +15,16 @@ Traditional crypto UX forces users to manually approve every transaction, manage
 - **You sign with Touch ID / Face ID** — no seed phrase, no MetaMask required
 - **You keep the surplus** — if the resolver saves on fees, you get a share
 
-This is [TIP-1023](https://docs.tempo.xyz) — Tempo's intent transaction standard.
-
 ---
 
 ## Features
 
-- **WebAuthn Passkey signing** — P-256 biometric key, works on `localhost` in Chrome/Edge/Safari
+- **WebAuthn passkey signing** — P-256 biometric key, works on `localhost` in Chrome / Edge / Safari
 - **Real on-chain transfers** — TIP-20 token transfers confirmed on Tempo Testnet
-- **Live intent hash preview** — recalculates `keccak256(0x49 || payload)` on every field change
+- **Live intent hash preview** — recalculates `SHA-256(0x49 || payload)` on every field change
 - **Fee mechanics** — configurable `fee_ceiling` and `surplus_share` slider (0–100% to user)
 - **Auto-open explorer** — transaction link opens in [explore.tempo.xyz](https://explore.tempo.xyz) after confirmation
-- **Faucet built-in** — request 1M of each testnet token with one click via `tempo_fundAddress`
+- **Faucet built-in** — request 1M of each testnet token via `tempo_fundAddress`
 - **MetaMask fallback** — connects to Tempo chain automatically (chain 42431)
 
 ---
@@ -34,10 +32,10 @@ This is [TIP-1023](https://docs.tempo.xyz) — Tempo's intent transaction standa
 ## Tech stack
 
 ```
-Vanilla JS + HTML — no framework, no build step
-WebAuthn API      — navigator.credentials (P-256 / ES256)
-Tempo RPC         — fetch() JSON-RPC calls directly
-TIP-20 ABI        — manual eth_call + eth_sendTransaction encoding
+Vanilla JS + HTML  — no framework, no build step
+WebAuthn API       — navigator.credentials (P-256 / ES256)
+Tempo RPC          — fetch() JSON-RPC calls directly
+TIP-20 ABI         — manual eth_call + eth_sendTransaction encoding
 ```
 
 No npm. No webpack. Open `tip1023.html` in a browser.
@@ -49,15 +47,10 @@ No npm. No webpack. Open `tip1023.html` in a browser.
 **Requires a local server for passkey support (Chrome blocks WebAuthn on `file://`)**
 
 ```bash
-# Clone
-git clone https://github.com/YOUR_USERNAME/tempo-intent-builder
-cd tempo-intent-builder
-
-# Serve locally
+git clone https://github.com/rebulon/tempo-web3-passkey-demo
+cd tempo-web3-passkey-demo
 python -m http.server 8080
-
-# Open
-# http://localhost:8080/tip1023.html
+# Open http://localhost:8080/tip1023.html
 ```
 
 Then:
@@ -87,35 +80,6 @@ Intent hash: `SHA-256(0x49 || chainId:version:sender:nonce:feeCeiling:surplusSha
 
 ---
 
-## Testnet tokens
-
-| Token    | Address                                      |
-|----------|----------------------------------------------|
-| pathUSD  | `0x20c0000000000000000000000000000000000000` |
-| AlphaUSD | `0x20c0000000000000000000000000000000000001` |
-| BetaUSD  | `0x20c0000000000000000000000000000000000002` |
-| ThetaUSD | `0x20c0000000000000000000000000000000000003` |
-
----
-
-## File structure
-
-```
-tip1023/
-├── tip1023.html      # entry point — open this
-├── css/
-│   └── style.css     # IBM Plex Mono + Syne, cream/orange theme
-└── js/
-    ├── config.js     # RPC endpoints, token addresses, scenarios
-    ├── passkey.js    # WebAuthn register / authenticate / sign
-    ├── wallet.js     # MetaMask connect + RPC helper
-    ├── tokens.js     # balanceOf eth_call + faucet + transfer
-    ├── intent.js     # buildIntentPayload() + hashIntent()
-    └── app.js        # UI logic, both tx paths
-```
-
----
-
 ## Two transaction paths
 
 **Path A — MetaMask**
@@ -124,15 +88,45 @@ tip1023/
 **Path B — Passkey + Tempo Sponsor**
 `P-256 sign → POST sponsor.moderato.tempo.xyz → wait receipt → open explorer`
 
-The sponsor endpoint pays gas on behalf of the user. If unavailable, the signed intent is shown with a fallback message.
+---
+
+## Scenarios
+
+| Scenario | From | To | Condition |
+|----------|------|----|-----------|
+| FX Swap | pathUSD | AlphaUSD | PRICE_GTE 0.99 |
+| Transfer | pathUSD | — | none |
+| Payroll Batch | BetaUSD | — | BLOCK_GTE |
+| Scheduled | ThetaUSD | — | TIMESTAMP_GTE |
 
 ---
 
-## Limitations (testnet demo)
+## Testnet tokens
 
-- Passkey address is derived from `SHA-256(credentialId)` — not a real secp256k1 key, cannot sign raw Ethereum txs
-- `tx_type 0x49` intent format is draft spec — Tempo node mempool accepts standard EVM txs only for now
-- Sponsor API (`tempo_sponsorIntent`) is experimental
+| Token | Address |
+|-------|---------|
+| pathUSD | `0x20c0000000000000000000000000000000000000` |
+| AlphaUSD | `0x20c0000000000000000000000000000000000001` |
+| BetaUSD | `0x20c0000000000000000000000000000000000002` |
+| ThetaUSD | `0x20c0000000000000000000000000000000000003` |
+
+---
+
+## File structure
+
+```
+tip1023/
+├── tip1023.html      # entry point
+├── css/
+│   └── style.css
+└── js/
+    ├── config.js     # RPC endpoints, token addresses, scenarios
+    ├── passkey.js    # WebAuthn register / authenticate / sign
+    ├── wallet.js     # MetaMask connect + RPC helper
+    ├── tokens.js     # balanceOf + faucet + transfer
+    ├── intent.js     # buildIntentPayload() + hashIntent()
+    └── app.js        # UI logic
+```
 
 ---
 
@@ -140,24 +134,22 @@ The sponsor endpoint pays gas on behalf of the user. If unavailable, the signed 
 
 | | |
 |---|---|
-| Network | Tempo Testnet (Moderato) |
 | Chain ID | 42431 |
 | RPC | https://rpc.moderato.tempo.xyz |
 | Explorer | https://explore.tempo.xyz |
+| Sponsor | https://sponsor.moderato.tempo.xyz |
 | Faucet | `tempo_fundAddress` via RPC |
 
 ---
 
 ## Roadmap
 
-- [ ] Real secp256k1 key derivation from passkey (via WebAuthn PRF extension)
-- [ ] Multi-token swap routing (pathUSD → AlphaUSD via Tempo DEX)
-- [ ] Batch intents (payroll: send to N recipients in one intent)
+- [ ] Real secp256k1 key derivation from passkey (WebAuthn PRF extension)
+- [ ] Multi-token swap routing via Tempo DEX
+- [ ] Batch intents (payroll: N recipients in one intent)
 - [ ] Scheduled intents (execute after block / timestamp condition)
-- [ ] Merchant checkout widget (embeddable)
-- [ ] Mobile PWA
+- [ ] Merchant checkout widget
 
 ---
 
-Built with [Tempo](https://tempo.xyz) — a payment L1 with stablecoin-native fees and intent transactions."# tempo-web3-passkey-demo" 
-"# tempo-web3-passkey-demo" 
+Built with [Tempo](https://tempo.xyz) — a payments L1 with stablecoin-native fees and intent transactions.
